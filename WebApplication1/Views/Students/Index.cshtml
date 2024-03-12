@@ -1,0 +1,31 @@
+﻿@model IEnumerable<WebApplication1.Models.ViewModels.StudentViewModel>
+
+@{  
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<br />
+    <p>
+        @Html.ActionLink("Create New", "Create", null, new { @class = "btn btn-primary" })
+    </p>
+    <table class="table">
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Name)
+            </th>
+          
+            <th></th>
+        </tr>
+    
+    @foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Name)
+            </td>
+          
+         
+        </tr>
+    }
+    
+    </table>
+
