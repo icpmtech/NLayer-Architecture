@@ -11,40 +11,23 @@ namespace WebApplication1
     using System.Web.Mvc;
     using System.Web.Optimization;
     using System.Web.Routing;
-    using Hangfire;
-    using Hangfire.SqlServer;
+   
+    using WebApplication1.App_Start;
     public class MvcApplication : System.Web.HttpApplication
     {
-        private BackgroundJobServer _backgroundJobServer;
-        private IEnumerable<IDisposable> GetHangfireServers()
-        {
-            var connectionStringHangFireContext = ConfigurationManager.ConnectionStrings["HangFireContext"].ToString();
-
-            GlobalConfiguration.Configuration
-                .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
-                .UseSimpleAssemblyNameTypeSerializer()
-                .UseRecommendedSerializerSettings()
-                .UseSqlServerStorage(connectionStringHangFireContext);
-
-            yield return new BackgroundJobServer();
-        }
+        
         protected void Application_Start()
         {
             AreaRegistration.RegisterAllAreas();
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
+            WebApiConfig.Register(System.Web.Http.GlobalConfiguration.Configuration);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
-            HangfireAspNet.Use(GetHangfireServers);
-
-            // Let's also create a sample background job
-            BackgroundJob.Enqueue(() => Debug.WriteLine("Hello world from Hangfire!"));
-            _backgroundJobServer = new BackgroundJobServer();
-
         }
 
         protected void Application_End(object sender, EventArgs e)
         {
-            _backgroundJobServer.Dispose();
+       
         }
     }
 }
