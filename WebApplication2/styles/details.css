@@ -1,0 +1,253 @@
+/* detail builder styling */
+.details-container {
+    display: table; 
+    table-layout: fixed;
+    width: 100%;
+}
+
+.details-heading {
+    color: rgb(102, 102, 102);  
+    font-size: 1.2em;
+    font-weight: 500;
+    margin-bottom: 5px;
+ }
+
+.details-column {
+    border: 1px solid #F5F5F5;
+    display: table-cell;
+    width: 33%;
+}
+
+.details-header {
+    display: table;
+    font-size: 1.2em;
+    font-weight: 700;
+    margin-bottom:5px;
+    min-height: 30px;  
+    overflow-wrap: break-word;
+    table-layout: fixed;    
+    width:100%;
+    word-wrap: break-word;
+}
+
+.details-header-caption {
+    display: table-caption;
+}
+
+.details-left-header {
+    display: table-cell;
+    padding-left: 5px;
+    width: 47%;
+}
+
+.details-right-header {
+    display: table-cell;
+    width: 47%;
+}
+
+.details-row {
+    line-height: 15px;
+    min-height: 37px;
+    overflow: auto;
+}
+
+.details-row-left {
+    float: left;
+    overflow-wrap: break-word;
+    overflow-y: hidden;
+    padding-left: 5px;
+    width: 47%;
+    word-wrap: break-word;
+}
+
+.details-row-right {
+    float: right;
+    overflow-wrap: break-word;
+    overflow-y: hidden;
+    padding-left: 2px;    
+    width: 47%;
+    word-wrap: break-word;
+    padding-bottom: 6px; /* 15157 add space for a long field, e.g. given name length can be 200 chars on BenOwner Details */
+}
+
+.grid-heading {
+    color: rgb(102, 102, 102);  
+    display: inline-block;
+    font-size: 1.2em;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.accordion {
+    padding: 12px;
+    background-color: #ededed;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+}
+
+.accordion i {
+    font-size: 16px;
+    margin-right: 5px;
+}
+
+.accordion .accordion-content {
+    overflow: hidden;
+    padding-left: 30px;
+}
+
+.popup-scrollable {
+    overflow: auto;
+    max-height: 90vh;
+    min-width: 400px;
+}
+
+.popup-container {
+    padding: 15px;
+    width: 700px;
+}
+
+.popup-container.large {
+    width: 900px;
+}
+
+.popup-container-small {
+    padding: 15px;
+    width: 400px;
+}
+
+.k-textbox.full-size {
+    height: 100px;
+    width: 100%;
+}
+
+textarea.k-textbox.form-control, textarea.k-textbox.full-size {
+    min-height: 140px;
+}
+
+textarea.k-textbox:disabled, textarea.k-textbox[readonly] {
+    background-color: #e9ecef;
+    opacity: 1;
+}
+
+.d-block {
+    display: block;
+}
+
+.k-state-selected > td > div> div a {
+    color:white;
+}
+
+.k-state-selected > td  {
+    background-color: #b72202;
+}
+
+/* Allows long strings in grid cells to be displayed with an ellipsis.
+   This rule works in conjuction with the setTooltips() function
+   in pageableGridComponent.tsx */ 
+.react-grid tr > td {
+    white-space: nowrap;
+}
+
+/*Fixed bug with white space on the right hand side of grids 
+  when grid has frozen/locked columns and grid is wider than 
+  the total default width of the columns */
+.react-grid table[role="grid"]{
+    width:100% !important;
+}
+
+/* Allows long strings to be line-broken at any random point.
+   This option works in conjunction with the 'word-break' rule 
+   in _common.scss under the Adr.Web project */
+.allow-word-break tr > td {
+    white-space: normal;
+}
+
+.alert.alert-info.custom-info {
+    background-color: rgb(237, 237, 237); /* TODO: use proper color names? */
+    border-width: 0px;
+    color: rgb(102, 102, 102);
+    margin-top: 5px;
+}
+
+.btn + .btn {
+    margin-left: 5px;
+}
+
+.k-filter-help-text ~ label > input {    
+    margin-right:4px;
+    margin-top: -2px;
+    vertical-align: middle;
+}
+
+.k-filter-help-text ~ label { 
+    margin-top:5px;
+    margin-right:20px;
+}
+
+.k-filter-menu > ul > li > label > input {
+    margin-top: -2px;
+    vertical-align: middle;
+    margin-right:4px;
+}
+
+.wideDropdown > .k-widget.k-dropdown {
+   width: 100%;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+/* Rules for hiding the grid scrollbar*/
+.no-scrollbar .k-grid-header {
+    padding: 0 !important;
+}
+
+.no-scrollbar .k-grid-content {
+    overflow-y: visible;
+}
+
+/* Event Round Reports */
+#round-reports {
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+
+#round-reports p {
+    margin-bottom: 0;
+    line-height: 1.5;
+}
+
+#round-reports .k-upload {
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+
+#round-reports .k-dropzone {
+    padding: 0;
+}
+
+.election-sheet-FileuploadContainer .k-upload .k-dropzone {
+    padding: 0;
+}
+
+.dtcc-rpa-report-FileuploadContainer .k-upload .k-dropzone {
+     padding: 0;
+ }
+
+#round-reports .k-dropzone em {
+    display: none;
+}
+
+#dtcc-rpa-report-Fileupload-error {
+    margin-bottom: 0;
+}
+
+.form-row-text {
+    display: table-cell;
+    height: 30px;
+    vertical-align: middle;
+    padding-left: 5px;
+    padding-right: 20px;
+}

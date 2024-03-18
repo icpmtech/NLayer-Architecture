@@ -1,0 +1,7 @@
+{
+  "extends": ["tslint:latest", "tslint-react"],
+  "rules": {
+    // enable tslint-react rules here (https://github.com/palantir/tslint-react)
+    "jsx-no-lambda": true
+  }
+}

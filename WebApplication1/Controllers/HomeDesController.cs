@@ -11,6 +11,8 @@ namespace WebApplication1.Controllers
       
         public ActionResult IndexDes()
         {
+         ServiceReferenceSOA1.ServiceClient service=new ServiceReferenceSOA1.ServiceClient();
+         var res=   service.GetData(0);
             return View();
         }
 

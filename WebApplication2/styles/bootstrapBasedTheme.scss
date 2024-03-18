@@ -1,0 +1,25 @@
+
+// The bootstrap gray 700. Update if the bootstrap one does. Has to be available here as we are referecing it, but can't import bootstrap yet
+$gray-700: #495057 !default;
+
+$brand-primary:         #ea2b02; // #337ab7
+$brand-success:         #5cb85c;
+$brand-info:            #5bc0de;
+$brand-warning:         #f0ad4e;
+$brand-danger:          $brand-primary;
+
+$primary: $brand-primary;
+$body-color: #666666;
+
+$selected-bg: #ea2b02;
+
+$pager-item-text: $gray-700;
+
+$pager-item-hover-text: $gray-700;
+
+$border-radius: 4px;
+
+$font-size-base: 0.875rem;
+
+// $icon-font-url: '../../Content/icons/WebComponentsIcons.ttf';
+@import "../node_modules/@progress/kendo-theme-bootstrap/dist/all.scss"

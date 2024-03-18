@@ -1,0 +1,580 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ assembly name="$(TargetDir)\..\..\Adr.Web\bin\System.Web.Mvc.dll" #>
+<#@ assembly name="$(TargetDir)\..\..\Adr.Web\bin\System.Web.Http.dll" #>
+<#@ assembly name="$(TargetDir)\..\..\Adr.Web\bin\Adr.Web.dll" #>
+<#@ assembly name="$(TargetDir)\..\..\Adr.Web\bin\Adr.Domain.dll" #>
+<#@ assembly name="$(TargetDir)\Humanizer.dll" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="Humanizer" #>
+<#@ output extension=".ts" #><#
+
+	System.Type[] types = null;
+	try
+	{
+		types = typeof(Adr.Web.Features.ApiCommon.BaseMediatorController).Assembly.GetTypes().ToArray();
+	}
+	catch(System.Reflection.ReflectionTypeLoadException e)
+	{
+		types = e.Types.Where(x => x != null).ToArray();
+	}
+
+	
+	var controllers = LoadControllerDetails(types);
+
+	var usedTypes = new List<System.Type>();
+	foreach(var m in controllers.SelectMany(x => x.MethodDetails))
+	{
+		AddType(m.ReturnType, usedTypes);
+	}
+	foreach(var a in controllers.SelectMany(x => x.MethodDetails).SelectMany(x => x.ArgumentDetails))
+	{
+		AddType(a.ArgumentType, usedTypes);
+	}
+
+	var dtos = new Dtos(usedTypes).Sorted();
+#>import { Pending } from "../classes/pending";
+import { JsonServiceHelper } from "../classes/jsonServiceHelper";
+import { UrlHelpers } from "../classes/urlHelpers";
+
+export module Dtos {
+
+    ///************* Enums *****************
+
+<# 
+foreach(var e in dtos.Where(x => x.IsEnum))
+{
+#>
+    export enum <#= ToJSTypeName(e, false, false) #> {
+<#
+	foreach(var val in e.GetFields().Where(x => x.IsLiteral && ((int)x.GetValue(null) != 0 || x.Name != "Unknown")))
+	{
+#>
+        <#=val.Name#> = <#=(int)val.GetValue(null)#>,
+<#
+	}
+#>
+    }
+
+<#
+}
+#>
+
+    ///************* Dtos *****************
+
+<# 
+foreach(var d in dtos.Where(x => !x.IsEnum))
+{
+#>
+    export interface <#= ToJSTypeName(d, false, true) #> {
+<#
+	foreach(var p in d.IsGenericType ? d.GetGenericTypeDefinition().GetProperties() : d.GetProperties())
+	{
+#>
+        <#=ToJSName(p.Name)#>: <#=ToJSTypeName(p.PropertyType, false, false)#>;
+<#
+	}
+#>
+    }
+
+<#
+}
+#>
+}
+
+export module Apis {
+
+    ///************* Apis *****************
+
+<# 
+foreach(var c in controllers)
+{
+#>
+    export class <#=c.Name.Replace("Controller", "")#> {
+<# 
+    
+    var methods = c.MethodDetails.Where(x => x.ReturnType != typeof(Adr.Web.Features.ApiCommon.FileResponse));
+    var methods2 = methods.GroupBy(x => x.Name);
+
+	foreach(var mgroup in methods2)
+	{
+        MethodDetails m;
+
+        if (mgroup.Count() == 1)
+        {
+            m = mgroup.FirstOrDefault();
+        }
+
+        else
+        {
+#>
+
+<#
+           var items = mgroup.OrderBy(x => x.ArgumentDetails.Count());
+            m = items.LastOrDefault();
+
+            foreach (var method in items) {
+                var resultType = ToJSTypeName(method.ReturnType, true, false);
+#>
+        public <#=ToJSName(method.Name)#>(<#= string.Join(", ", method.ArgumentDetails.Select(x => ToJSName(x.Name) + ": " + ToJSTypeName(x.ArgumentType, true, false))) #>): JQueryPromise<<#= resultType #>>;
+<#
+            }
+        }
+        var resultType2 = ToJSTypeName(m.ReturnType, true, false);
+
+#>
+
+        public <#=ToJSName(m.Name)#>(<#= string.Join(", ", m.ArgumentDetails.Select(x => ToJSName(x.Name) + (IsCommonParameter(x.Name, mgroup) ? "" : "?") + ": " + ToJSTypeName(x.ArgumentType, true, false))) #><#= m.ArgumentDetails.Count() > 0 ? ", " : "" #>returnNulls?: boolean): JQueryPromise<<#= resultType2 #>> {
+            var helper = new JsonServiceHelper<<#= resultType2 #>>();
+
+            var urlParts = <#=GetUrlParts(m)#>;
+            var queryArgs = <#=GetQueryArgs(m)#>;
+            var dataArgs = <#= GetDataArgs(m) #>;
+
+            var fullUrl = UrlHelpers.buildUrl(urlParts, queryArgs);
+            return helper.sendRequestForItem(fullUrl, "<#= m.Method.ToUpper() #>", dataArgs, returnNulls);
+        }
+<#
+	}
+#>
+<#
+	foreach(var m in c.MethodDetails.Where(x => x.ReturnType == typeof(Adr.Web.Features.ApiCommon.FileResponse)))
+	{
+#>
+
+        public <#=ToJSName(m.Name)#>Url(<#= string.Join(", ", m.ArgumentDetails.Select(x => ToJSName(x.Name) + ": " + ToJSTypeName(x.ArgumentType, true, false))) #>): string {
+			var urlParts = <#=GetUrlParts(m)#>;
+			var queryArgs = <#=GetQueryArgs(m)#>;
+
+			return UrlHelpers.buildUrl(urlParts, queryArgs);
+        }
+<#
+	}
+#>
+    }
+
+<#
+}
+#>
+}
+<#+
+	public class ControllerDetails
+	{
+		public string Name {get;set;}
+		public List<MethodDetails> MethodDetails {get;set;} = new List<MethodDetails>();
+	}
+
+	public class MethodDetails
+	{
+		public string Url{get; set;}
+		public string Method {get;set;}
+		public string Name {get;set;}
+		public Type ReturnType {get;set;}
+		public List<ArgumentDetails> ArgumentDetails {get;set;} = new List<ArgumentDetails>();
+
+	}
+
+	public class ArgumentDetails
+	{
+		public string Name{get; set;}
+		public Type ArgumentType {get;set;}
+		public bool FromQueryString {get;set;}
+		public bool FromUrl {get;set;}
+		public bool FromBody {get;set;}
+	}
+
+    public bool IsCommonParameter(string name, IEnumerable<MethodDetails> methods)
+    {
+        if (methods.Count() < 2) return true;
+        
+        foreach (var method in methods) {
+            if (!method.ArgumentDetails.Any(x => x.Name == name))
+                return false;
+        }
+        return true;
+    }
+
+	public string ToJSName(string name)
+	{
+		var result = name.Camelize();
+		if(result.StartsWith("aDR"))
+		{
+			return result.Substring(0,3).ToLower() + result.Substring(3);
+		}
+		if(result.StartsWith("cUSIP"))
+		{
+			return result.Substring(0,5).ToLower() + result.Substring(5);
+		}
+		if(result.StartsWith("uIFilter"))
+		{
+			return result.Substring(0,2).ToLower() + result.Substring(2);
+		}
+		if(result.StartsWith("dSName"))
+		{
+			return result.Substring(0,2).ToLower() + result.Substring(2);
+		}
+		if(result.StartsWith("dSDtcCode"))
+		{
+			return result.Substring(0,2).ToLower() + result.Substring(2);
+		}
+		return result;
+	}
+
+	public string ToJSTypeName(Type type, bool includeNamespace, bool asGenericType)
+	{
+		if(type == typeof(System.String))
+		{
+			return "string";
+		}
+
+		if(type == typeof(System.Int32) || type == typeof(System.Int64) || type == typeof(System.Decimal))
+		{
+			return "number";
+		}
+
+		if(type == typeof(System.Boolean))
+		{
+			return "boolean";
+		}
+
+		if(type == typeof(System.DateTime) || type == typeof(System.DateTimeOffset))
+		{
+			return "Date";
+		}
+
+		if(type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Nullable<>))
+		{
+			return ToJSTypeName(type.GetGenericArguments()[0], includeNamespace, asGenericType);
+		}
+
+		if(type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IEnumerable<>))
+		{
+			return ToJSTypeName(type.GetGenericArguments()[0], includeNamespace, asGenericType) + "[]";
+		}
+
+		if(type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Adr.Web.Features.ApiCommon.StandardResponse<>))
+		{
+			return ToJSTypeName(type.GetGenericArguments()[0], includeNamespace, asGenericType);
+		}
+
+		if(type.IsGenericTypeDefinition && asGenericType)
+		{
+			var typeArgs = type.GetGenericArguments().Select(x => x.Name).ToArray();
+			return (includeNamespace ? "Dtos." : "") + type.Name.Substring(0, type.Name.IndexOf("`")) + "<" + string.Join(", ", typeArgs) + ">";
+		}
+		
+		if(type.IsGenericType && asGenericType)
+		{
+			return ToJSTypeName(type.GetGenericTypeDefinition(), includeNamespace, asGenericType);
+		}
+		else if(type.IsGenericType)
+		{
+			var typeArgs = type.GetGenericArguments().Select(x => ToJSTypeName(x, includeNamespace, false)).ToArray();
+			return (includeNamespace ? "Dtos." : "") + type.Name.Substring(0, type.Name.IndexOf("`")) + "<" + string.Join(", ", typeArgs) + ">";
+		}
+
+		if(type == typeof(Adr.Web.Features.ApiCommon.EmptyResponse))
+		{
+			return "void";
+		}
+
+		if(type.IsArray)
+		{
+			return ToJSTypeName(type.GetElementType(), includeNamespace, asGenericType) + "[]";
+		}
+
+		if(type.Name == "HttpPostedFileBase")
+		{
+			return "any";
+		}
+
+		var name = type.Name;
+		if(type.IsNested && !type.DeclaringType.IsGenericType)
+		{
+			name = ToJSTypeName(type.DeclaringType, false, false) + "_" + type.Name;
+		}
+
+		return (includeNamespace ? "Dtos." : "") + name;
+	}
+
+	public void AddType(System.Type type, List<System.Type> types)
+	{
+		if(!types.Contains(type))
+		{
+			types.Add(type);
+		}
+	}
+
+	private string GetQueryArgs(MethodDetails details)
+	{
+		var args = details.ArgumentDetails.Where(x => x.FromQueryString).ToArray();
+		return ConvertArgumentDetails(args);
+	}
+
+	private string GetUrlParts(MethodDetails details)
+	{
+		var urlParts = string.Join(", ", details.Url.Split('/').Where(x => !string.IsNullOrEmpty(x) && x.ToLower() != "api").Select(x => x.StartsWith("{") ? x.Replace("{", "").Replace("}", "") : $"\"{x}\""));
+		return "[" + urlParts + "]";
+	}
+
+	private string GetDataArgs(MethodDetails details)
+	{
+		var args = details.ArgumentDetails.Where(x => x.FromBody).ToArray();
+		return ConvertArgumentDetails(args);
+	}
+
+	private string ConvertArgumentDetails(ArgumentDetails[] args)
+	{
+		if(args.Length == 0)
+		{
+			return "null";
+		}
+		else if(args.Length == 1 && args[0].ArgumentType.IsClass && !(args[0].ArgumentType.IsAssignableFrom(typeof(System.String))))
+		{
+			return args[0].Name;
+		}
+		else if(args.Length == 1)
+		{
+			return "{ " + args[0].Name + " }";
+		}
+		else
+		{
+			var segments = args.Select(x => x.ArgumentType.IsClass ? x.Name : "{ " + x.Name + " }").ToArray();
+			return "Object.assign({}, " + string.Join(", ", segments) + ")";
+		}
+	}
+
+	private ControllerDetails[] LoadControllerDetails(System.Type[] types)
+	{
+		var result = new List<ControllerDetails>();
+		var controllerTypes = types.Where(x => x.IsSubclassOf(typeof(Adr.Web.Features.ApiCommon.BaseMediatorController))).Where(x => !x.IsAbstract).ToArray();
+
+		foreach(var c in controllerTypes)
+		{
+			var controller = new ControllerDetails(){
+				Name = c.Name
+			};
+
+			var routePrefix = ((System.Web.Http.RoutePrefixAttribute[])c.GetCustomAttributes(typeof(System.Web.Http.RoutePrefixAttribute), false))?.FirstOrDefault()?.Prefix;
+
+			foreach(var method in c.GetMethods(System.Reflection.BindingFlags.Public|System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.DeclaredOnly))
+			{
+				var isValid = false;
+				var returnType = method.ReturnType;
+				if(returnType.IsGenericType && returnType.GetGenericTypeDefinition() == typeof(System.Threading.Tasks.Task<>))
+				{
+					returnType = returnType.GetGenericArguments()[0];
+				}
+
+				if(returnType.IsGenericType && returnType.GetGenericTypeDefinition() == typeof(Adr.Web.Features.ApiCommon.StandardResponse<>))
+				{
+					isValid = true;
+				}
+
+				if(returnType == typeof(Adr.Web.Features.ApiCommon.FileResponse))
+				{
+					isValid = true;
+				}
+
+				if(returnType == typeof(Adr.Web.Features.ApiCommon.EmptyResponse))
+				{
+					isValid = true;
+				}
+
+				if(c.Name == "BatchClaimFileUploadApiController" && method.Name == "UploadFilesASync")
+				{
+					isValid = false;
+				}
+
+				if(isValid)
+				{
+					var route = ((System.Web.Http.RouteAttribute[])method.GetCustomAttributes(typeof(System.Web.Http.RouteAttribute), false))?.FirstOrDefault()?.Template;
+					var httpMethod = "";
+			
+					if(Attribute.IsDefined(method, typeof(System.Web.Http.HttpGetAttribute)))
+					{
+						httpMethod = "Get";
+					}
+					else if(Attribute.IsDefined(method, typeof(System.Web.Http.HttpPostAttribute)))
+					{
+						httpMethod = "Post";
+					}
+					else if(Attribute.IsDefined(method, typeof(System.Web.Http.HttpPutAttribute)))
+					{
+						httpMethod = "Put";
+					}
+					else if(Attribute.IsDefined(method, typeof(System.Web.Http.HttpDeleteAttribute)))
+					{
+						httpMethod = "Delete";
+					}
+					else if(method.Name.StartsWith("Get"))
+					{
+						httpMethod = "Get";
+					}
+					else if(method.Name.StartsWith("Post"))
+					{
+						httpMethod = "Post";
+					}
+					else if(method.Name.StartsWith("Put"))
+					{
+						httpMethod = "Put";
+					}
+					else if(method.Name.StartsWith("Delete"))
+					{
+						httpMethod = "Delete";
+					}
+
+					var methodDetails = new MethodDetails()
+					{
+						Name = method.Name,
+						Method = httpMethod,
+						ReturnType = returnType,
+						Url = routePrefix + "/" + route
+					};
+				
+					controller.MethodDetails.Add(methodDetails);
+				
+					foreach(var arg in method.GetParameters())
+					{
+						var argumentDetails = new ArgumentDetails(){
+							Name = arg.Name,
+							ArgumentType = arg.ParameterType
+						};
+					
+						argumentDetails.FromQueryString = Attribute.IsDefined(arg, typeof(System.Web.Http.FromUriAttribute));
+						argumentDetails.FromBody = Attribute.IsDefined(arg, typeof(System.Web.Http.FromBodyAttribute));
+						argumentDetails.FromUrl = (route ?? "").Replace(" ", "").Contains($"{{{arg.Name}}}") || (route ?? "").Replace(" ", "").Contains($"{{{arg.Name}:");
+
+						if(!argumentDetails.FromQueryString && !argumentDetails.FromBody && !argumentDetails.FromUrl)
+						{
+							if(httpMethod == "Get")
+							{
+								argumentDetails.FromQueryString = true;
+							}
+							else
+							{
+								argumentDetails.FromBody = true;
+							}
+						}
+
+						methodDetails.ArgumentDetails.Add(argumentDetails);
+					}
+				}
+			}
+
+			if(controller.MethodDetails.Any())
+			{
+				result.Add(controller);
+			}
+		}
+		return result.ToArray();
+	}
+
+	public class Dtos
+	{
+		List<System.Type> _types;
+
+		public Dtos(List<System.Type> types)
+		{
+			_types = types;
+			_excluded = new []{
+				typeof(System.String),
+				typeof(System.Int32),
+				typeof(System.Int64),
+				typeof(System.Int64),
+				typeof(System.Decimal),
+				typeof(System.Double),
+				typeof(System.DateTime),
+				typeof(System.DateTimeOffset),
+				typeof(System.Boolean),
+			}.ToList();
+		}
+
+		public IEnumerable<System.Type> Sorted()
+		{
+			List<System.Type> included = new List<System.Type>();
+			foreach(var t in _types.OrderBy(x => x.Name))
+			{
+				foreach(var r in AddDto(t, included))
+				{
+					yield return r;
+				}
+			}
+		}
+
+		private List<System.Type> _excluded; 
+
+		private IEnumerable<System.Type> AddDto(System.Type type, List<System.Type> included)
+		{
+			var isIncluded = included.Contains(type);
+
+			if(_excluded.Contains(type))
+			{
+				isIncluded = true;
+			}
+
+			if(type.Name == "HttpPostedFileBase")
+			{
+				isIncluded = true;
+			}
+
+			if(type == typeof(Adr.Web.Features.ApiCommon.EmptyResponse))
+			{
+				isIncluded = true;
+			}
+
+			if(type == typeof(Adr.Web.Features.ApiCommon.FileResponse))
+			{
+				isIncluded = true;
+			}
+
+			if(!isIncluded)
+			{
+				
+				included.Add(type);
+
+				System.Type childType = null;
+				if(type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Adr.Web.Features.ApiCommon.StandardResponse<>))
+				{
+					childType = type.GetGenericArguments()[0];
+				}
+				else if(type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Nullable<>))
+				{
+					childType = type.GetGenericArguments()[0];
+				}
+				else if(type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IEnumerable<>))
+				{
+					childType = type.GetGenericArguments()[0];
+				}
+				else if(type.IsArray)
+				{
+					childType = type.GetElementType();
+				}
+
+				if(childType != null)
+				{
+					foreach(var sub in this.AddDto(childType, included))
+					{
+						yield return sub;
+					}
+				}
+				else
+				{
+					yield return type;
+
+					foreach(var prop in type.GetProperties())
+					{
+						foreach(var propType in this.AddDto(prop.PropertyType, included))
+						{
+							yield return propType;
+						} 
+					}
+				}
+
+			}
+		}
+
+	}
+#>
