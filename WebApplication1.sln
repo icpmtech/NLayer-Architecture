@@ -23,9 +23,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HangFire MVC 5 WebApp", "..
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApplication2", "WebApplication2\WebApplication2.csproj", "{5CB36678-C2EB-4588-A065-138FF47B5F8E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApplicationCoreService", "WebApplicationCoreService\WebApplicationCoreService.csproj", "{FDE682DA-35B8-46BE-9920-DC97B8560981}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApplicationCoreService", "WebApplicationCoreService\WebApplicationCoreService.csproj", "{FDE682DA-35B8-46BE-9920-DC97B8560981}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApplicationWebAPI", "WebApplicationWebAPI\WebApplicationWebAPI.csproj", "{88BBF4FF-16E2-4B80-8025-C707AD1EA1A3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApplicationWebAPI", "WebApplicationWebAPI\WebApplicationWebAPI.csproj", "{88BBF4FF-16E2-4B80-8025-C707AD1EA1A3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApplicationAutomapper", "WebApplicationAutomapper\WebApplicationAutomapper.csproj", "{20FB5D06-EBED-4CDF-9C0C-4D3C75AEDD0B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -65,6 +67,10 @@ Global
 		{88BBF4FF-16E2-4B80-8025-C707AD1EA1A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{88BBF4FF-16E2-4B80-8025-C707AD1EA1A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{88BBF4FF-16E2-4B80-8025-C707AD1EA1A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20FB5D06-EBED-4CDF-9C0C-4D3C75AEDD0B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20FB5D06-EBED-4CDF-9C0C-4D3C75AEDD0B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20FB5D06-EBED-4CDF-9C0C-4D3C75AEDD0B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20FB5D06-EBED-4CDF-9C0C-4D3C75AEDD0B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -78,6 +84,7 @@ Global
 		{5CB36678-C2EB-4588-A065-138FF47B5F8E} = {97664CCD-C763-4466-B91D-F00183E0696B}
 		{FDE682DA-35B8-46BE-9920-DC97B8560981} = {97664CCD-C763-4466-B91D-F00183E0696B}
 		{88BBF4FF-16E2-4B80-8025-C707AD1EA1A3} = {97664CCD-C763-4466-B91D-F00183E0696B}
+		{20FB5D06-EBED-4CDF-9C0C-4D3C75AEDD0B} = {97664CCD-C763-4466-B91D-F00183E0696B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {93B8F3C8-E860-424C-A785-87932A60749C}
