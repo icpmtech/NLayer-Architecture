@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Hosting;
+
 namespace WebApplicationAutomapper
 {
     public class Program
@@ -9,6 +11,14 @@ namespace WebApplicationAutomapper
             // Add services to the container.
             builder.Services.AddControllersWithViews();
 
+            builder.Services.AddAutoMapper(typeof(Program));
+            // This works if your profiles are in the same assembly as Startup.cs
+                                                             // Alternatively, specify assemblies explicitly
+                               add                              // services.AddAutoMapper(typeof(UserProfile).Assembly);
+
+            // Don't forget to add frameworks services and any other services you might need
+            builder.Services.AddControllersWithViews();
+           
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
